@@ -1,0 +1,99 @@
+﻿
+<div>
+    <dialog id="my-dialog" @onclose="OnClose" style="border:5px solid #0b5ed7; min-width:300px;">
+        @if (ShowMainContent)
+        {
+            <EditForm Enhance Model="Product" OnValidSubmit="Save">
+                <div class="card">
+                    <div class="card-header"> @Title Product</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label" for="name">Product Name</label>
+                            <InputText id="name" @bind-Value="Product.Name" class="form-control"></InputText>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label class="form-label" for="amount">Product Amount</label>
+                            <InputNumber id="amount" @bind-Value="Product.Amount" class="form-control"></InputNumber>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="hstack gap-3 float-end">
+                            <form method="dialog">
+                                <button class="btn btn-danger">Close</button>
+                            </form>
+                            <button class="btn btn-success" type="button" @onclick="Save">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+        @if (ShowConfirmationContent)
+        {
+            <div class="card">
+                <div class="card-header">Are you sure you wanna do this?</div>
+                <div class="card-body">
+                    <div class="hstack gap-2">
+
+                        <form method="dialog">
+                            <button class="btn btn-danger" @onclick="()=>ConfirmDelete(true)">Yes</button>
+                            <button class="btn btn-primary">No</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </dialog>
+</div>
+
+@code {
+    private bool ShowMainContent { get; set; } = true;
+    private bool ShowConfirmationContent { get; set; } = false;
+    public string Title { get; set; } = "Add";
+    [Parameter] public Product Product { get; set; } = new();
+    [Parameter] public EventCallback<Product> HandleAddProductEvent { get; set; }
+
+    void OnClose(EventArgs e)
+    {
+
+    }
+
+    async Task Save()
+    {
+        if (Product!.Name is null) return;
+        await HandleAddProductEvent.InvokeAsync(Product);
+    }
+
+    public void ClearProductContainer()
+    {
+        Product = new();
+    }
+
+    public void ChangeTitle(string title)
+    {
+        Title = title;
+    }
+
+    // Confirm Delete Product
+    public void ShowConfirmDialog()
+    {
+        ShowMainContent = false;
+        ShowConfirmationContent = true;
+    }
+
+    [Parameter] public EventCallback HandleConfirmDeleteEvent { get; set; }
+    private async void ConfirmDelete(bool response)
+    {
+        if (response)
+        {
+            await HandleConfirmDeleteEvent.InvokeAsync();
+            ShowConfirmDialog();
+        }
+
+    }
+
+    public void LoadDefault()
+    {
+        ShowMainContent = true;
+        ShowConfirmationContent = false;
+    }
+}
